@@ -113,8 +113,8 @@ fn main() {
     loop {
         let response: Response = client
             .get(format!(
-                "http://airgradient_{}.local/measures/current",
-                env::var("SERIAL_NO").expect("SERIAL_NO environment variable must be set")
+                "http://{}/measures/current",
+                env::var("IP_ADDR").expect("IP_ADDR environment variable must be set")
             ))
             .header("accept", "application/json")
             .send()
