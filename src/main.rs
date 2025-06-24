@@ -8,7 +8,7 @@ use std::{env, thread};
 #[derive(Debug, Serialize, Deserialize)]
 struct Response {
     /// WiFi signal strength
-    wifi: i64,
+    wifi: i32,
     /// Serial Number of the monitor
     #[serde(rename = "serialno")]
     serial_no: String,
@@ -49,10 +49,10 @@ struct Response {
     #[serde(rename = "noxRaw")]
     nox_raw: f64,
     /// Counts every measurement cycle. Low boot counts indicate restarts.
-    boot: i64,
+    boot: i32,
     /// Same as boot property. Required for Home Assistant compatibility. Will be depreciated.
     #[serde(rename = "bootCount")]
-    boot_count: i64,
+    boot_count: i32,
     /// Current configuration of the LED mode
     #[serde(rename = "ledMode")]
     led_mode: String,
@@ -108,6 +108,24 @@ fn main() {
 
     let client = reqwest::blocking::Client::new();
 
+    let wifi = gauge!("airgradient_wifi");
+    let rco2 = gauge!("airgradient_rco2");
+    let pm01 = gauge!("airgradient_pm01");
+    let pm02 = gauge!("airgradient_pm02");
+    let pm10 = gauge!("airgradient_pm10");
+    let pm003_count = gauge!("airgradient_pm003_count");
+    let atmp = gauge!("airgradient_atmp");
+    let atmp_compensated = gauge!("airgradient_atmp_compensated");
+    let rhum = gauge!("airgradient_rhum");
+    let rhum_compensated = gauge!("airgradient_rhum_compensated");
+    let pm02_compensated = gauge!("airgradient_pm02_compensated");
+    let tvoc_index = gauge!("airgradient_tvoc_index");
+    let tvoc_raw = gauge!("airgradient_tvoc_raw");
+    let nox_index = gauge!("airgradient_nox_index");
+    let nox_raw = gauge!("airgradient_nox_raw");
+    let boot = gauge!("airgradient_boot");
+    let boot_count = gauge!("airgradient_boot_count");
+
     println!("Started");
 
     loop {
@@ -122,29 +140,23 @@ fn main() {
             .json()
             .unwrap();
 
-        gauge!("airgradient_wifi", response.wifi as f64);
-        gauge!("airgradient_rco2", response.rco2 as f64);
-        gauge!("airgradient_pm01", response.pm01 as f64);
-        gauge!("airgradient_pm02", response.pm02 as f64);
-        gauge!("airgradient_pm10", response.pm10 as f64);
-        gauge!("airgradient_pm003_count", response.pm003_count as f64);
-        gauge!("airgradient_atmp", response.atmp);
-        gauge!("airgradient_atmp_compensated", response.atmp_compensated);
-        gauge!("airgradient_rhum", response.rhum as f64);
-        gauge!(
-            "airgradient_rhum_compensated",
-            response.rhum_compensated as f64
-        );
-        gauge!(
-            "airgradient_pm02_compensated",
-            response.pm02_compensated as f64
-        );
-        gauge!("airgradient_tvoc_index", response.tvoc_index as f64);
-        gauge!("airgradient_tvoc_raw", response.tvoc_raw as f64);
-        gauge!("airgradient_nox_index", response.nox_index as f64);
-        gauge!("airgradient_nox_raw", response.nox_raw as f64);
-        gauge!("airgradient_boot", response.boot as f64);
-        gauge!("airgradient_boot_count", response.boot_count as f64);
+        wifi.set(response.wifi);
+        rco2.set(response.rco2);
+        pm01.set(response.pm01);
+        pm02.set(response.pm02);
+        pm10.set(response.pm10);
+        pm003_count.set(response.pm003_count);
+        atmp.set(response.atmp);
+        atmp_compensated.set(response.atmp_compensated);
+        rhum.set(response.rhum);
+        rhum_compensated.set(response.rhum_compensated);
+        pm02_compensated.set(response.pm02_compensated);
+        tvoc_index.set(response.tvoc_index);
+        tvoc_raw.set(response.tvoc_raw);
+        nox_index.set(response.nox_index);
+        nox_raw.set(response.nox_raw);
+        boot.set(response.boot);
+        boot_count.set(response.boot_count);
 
         thread::sleep(Duration::from_secs(60));
     }
