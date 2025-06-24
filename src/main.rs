@@ -1,9 +1,20 @@
+use clap::Parser;
 use metrics::{describe_gauge, gauge};
 use metrics_exporter_prometheus::PrometheusBuilder;
 use metrics_util::MetricKindMask;
 use serde::{Deserialize, Serialize};
+use std::net::SocketAddr;
+use std::thread;
 use std::time::Duration;
-use std::{env, thread};
+
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    #[arg(short = 'l', long, default_value = "0.0.0.0:9090")]
+    listen: SocketAddr,
+
+    airgradient_ip: String,
+}
 
 // comments from https://github.com/airgradienthq/arduino/blob/master/docs/local-server.md
 #[derive(Debug, Serialize, Deserialize)]
@@ -90,11 +101,13 @@ struct Response {
 fn main() {
     tracing_subscriber::fmt::init();
 
+    let args = Args::parse();
+
     let builder = PrometheusBuilder::new();
     builder
         // If an account disappears for 3 hours, it's probably gone.
         .idle_timeout(MetricKindMask::ALL, Some(Duration::from_secs(60 * 60 * 3)))
-        .with_http_listener(([0, 0, 0, 0], 9090))
+        .with_http_listener(args.listen)
         .install()
         .expect("Failed to install Prometheus recorder");
 
@@ -184,10 +197,7 @@ fn main() {
 
     loop {
         let response: Response = client
-            .get(format!(
-                "http://{}/measures/current",
-                env::var("IP_ADDR").expect("IP_ADDR environment variable must be set")
-            ))
+            .get(format!("http://{}/measures/current", args.airgradient_ip))
             .header("accept", "application/json")
             .send()
             .unwrap()
