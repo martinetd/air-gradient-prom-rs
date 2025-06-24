@@ -13,41 +13,41 @@ struct Response {
     #[serde(rename = "serialno")]
     serial_no: String,
     /// CO2 in ppm
-    rco2: i64,
+    rco2: f64,
     /// PM1 in ug/m3
-    pm01: i64,
+    pm01: f64,
     /// PM2.5 in ug/m3
-    pm02: i64,
+    pm02: f64,
     /// PM10 in ug/m3
-    pm10: i64,
+    pm10: f64,
     /// Particle count per dL
     #[serde(rename = "pm003Count")]
-    pm003_count: i64,
+    pm003_count: f64,
     /// Temperature in Degrees Celsius
     atmp: f64,
     /// Temperature in Degrees Celsius with correction applied
     #[serde(rename = "atmpCompensated")]
     atmp_compensated: f64,
     /// Relative Humidity
-    rhum: i64,
+    rhum: f64,
     /// Relative Humidity with correction applied
     #[serde(rename = "rhumCompensated")]
-    rhum_compensated: i64,
+    rhum_compensated: f64,
     /// PM2.5 in ug/m3 with correction applied (from fw version 3.1.4 onwards)
     #[serde(rename = "pm02Compensated")]
-    pm02_compensated: i64,
+    pm02_compensated: f64,
     /// Senisiron VOC Index
     #[serde(rename = "tvocIndex")]
-    tvoc_index: i64,
+    tvoc_index: f64,
     /// VOC raw value
     #[serde(rename = "tvocRaw")]
-    tvoc_raw: i64,
+    tvoc_raw: f64,
     /// Senisirion NOx Index
     #[serde(rename = "noxIndex")]
-    nox_index: i64,
+    nox_index: f64,
     /// NOx raw value
     #[serde(rename = "noxRaw")]
-    nox_raw: i64,
+    nox_raw: f64,
     /// Counts every measurement cycle. Low boot counts indicate restarts.
     boot: i64,
     /// Same as boot property. Required for Home Assistant compatibility. Will be depreciated.
