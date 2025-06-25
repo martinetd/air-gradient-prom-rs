@@ -6,6 +6,7 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.3.0", features = ["derive"] }
+log = "0.4.27"
 metrics = { version = "0.24" }
 metrics-exporter-prometheus = "0.17"
 metrics-util = { version = "0.20", default-features = false, features = [

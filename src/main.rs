@@ -1,4 +1,5 @@
 use clap::Parser;
+use log::warn;
 use metrics::{describe_gauge, gauge};
 use metrics_exporter_prometheus::PrometheusBuilder;
 use metrics_util::MetricKindMask;
@@ -17,7 +18,7 @@ struct Args {
 }
 
 // comments from https://github.com/airgradienthq/arduino/blob/master/docs/local-server.md
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 struct Response {
     /// Serial Number of the monitor
     #[serde(rename = "serialno")]
@@ -200,9 +201,12 @@ fn main() {
             .get(format!("http://{}/measures/current", args.airgradient_ip))
             .header("accept", "application/json")
             .send()
-            .unwrap()
-            .json()
-            .unwrap();
+            .and_then(|x| x.json())
+            .or_else(|e| {
+                warn!("Could not connect to {}: {:?}", args.airgradient_ip, e);
+                Err(())
+            })
+            .unwrap_or_default();
 
         wifi.set(response.wifi);
         pm01.set(response.pm01);

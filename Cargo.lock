@@ -43,6 +43,7 @@ name = "air-gradient-prom-rs"
 version = "0.0.1"
 dependencies = [
  "clap",
+ "log",
  "metrics",
  "metrics-exporter-prometheus",
  "metrics-util",
