@@ -5,6 +5,7 @@ use metrics_exporter_prometheus::PrometheusBuilder;
 use metrics_util::MetricKindMask;
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
+use std::net::ToSocketAddrs;
 use std::thread;
 use std::time::Duration;
 
@@ -97,6 +98,18 @@ struct Response {
     firmware: String,
     /// Current model name
     model: String,
+}
+
+fn resolve(host: &str) -> Result<String, std::io::Error> {
+    (host, 80)
+        .to_socket_addrs()
+        .and_then(|mut i| {
+            i.next().ok_or(std::io::Error::new(
+                std::io::ErrorKind::AddrNotAvailable,
+                "no ip",
+            ))
+        })
+        .map(|a| a.to_string())
 }
 
 fn main() {
@@ -194,19 +207,38 @@ fn main() {
 
     let client = reqwest::blocking::Client::new();
 
+    println!("Resolving...");
+    let mut ip = loop {
+        match resolve(args.airgradient_ip.as_str()) {
+            Ok(new_ip) => break new_ip,
+            Err(e) => warn!("Could not resolve {}: {:?}", args.airgradient_ip, e),
+        }
+        thread::sleep(Duration::from_secs(3));
+    };
     println!("Started");
 
     loop {
-        let response: Response = client
-            .get(format!("http://{}/measures/current", args.airgradient_ip))
+        let response: Response = match client
+            .get(format!("http://{}/measures/current", ip))
             .header("accept", "application/json")
             .send()
             .and_then(|x| x.json())
-            .or_else(|e| {
-                warn!("Could not connect to {}: {:?}", args.airgradient_ip, e);
-                Err(())
-            })
-            .unwrap_or_default();
+        {
+            Ok(r) => r,
+            Err(e) => {
+                warn!("Could not connect to {}: {:?}", ip, e);
+                match resolve(args.airgradient_ip.as_str()) {
+                    Ok(new_ip) => ip = new_ip,
+                    Err(e) => warn!(
+                        "Also could not resolve {} again ({:?}), reusing same ip...",
+                        args.airgradient_ip, e
+                    ),
+                }
+                // still sleep a bit, but less.
+                thread::sleep(Duration::from_secs(3));
+                continue;
+            }
+        };
 
         wifi.set(response.wifi);
         pm01.set(response.pm01);
